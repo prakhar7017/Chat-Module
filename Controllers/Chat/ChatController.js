@@ -1,39 +1,106 @@
+import { ChatRepository } from "../../Models/Repository/ChatRepository.js";
+
 export const createChat = async (req, res) => {
-  const { senderId, receiverId } = req.body;
+  const { senderId, receiverId, message } = req.body;
 
   try {
     // Create a new chat
-    const newChat = await ChatRepositroy.createNewChat();
+    const newChat = await ChatRepository.createNewChat(
+      senderId,
+      receiverId,
+      message
+    );
 
-    // Add members to the chat
-    await ChatRepositroy.bulkCreateChatMembers({senderId,receiverId,chatId:newChat.chat_id})
-
-    res.status(200).json(newChat);
+    res.status(200).json({
+      success: true,
+      message: "Chat created successfully",
+      data: newChat,
+    });
   } catch (error) {
     console.error("Error creating chat:", error.message);
-    res.status(500).json({ error: "Failed to create chat" });
+    res.status(500).json({
+      success: false,
+      errorMessage: "Failed to create chat",
+      error: error,
+    });
   }
 };
-export const updateMessageStatus = async ({ chatId, userId, status }) => {
+
+export const updateChat = async (req, res) => {
+  const { chatId,senderId,message } = req.body;
+
   try {
-    if (status === "seen") {
-      const lastMessage = await ChatRepositroy.getLastMessage(chatId, userId);
+    // Find the chat message by chatId and update it
+    const updatedChat = await ChatRepository.updateTheChat(chatId,senderId,message);
 
-      if (lastMessage) {
-        await ChatRepositroy.updateMessageSeenAt(lastMessage.message_id);
-      }
-    } else if (status === "delivered") {
-      const chats = await ChatRepositroy.findChatsByUserId(userId);
-
-      const chatIds = chats.map((chat) => chat.chat_id);
-
-      await ChatRepositroy.updateMessagesStatus({
-        chatIds,
-        userId,
-        status,
+    if (!updatedChat) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat not found",
       });
     }
+
+    return res.status(200).json({
+      success: true,
+      message: "Chat updated successfully",
+      data: updatedChat,
+    });
   } catch (error) {
-    console.error("Error updating message status:", error.message);
+    console.error("Error updating chat:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+}
+
+
+export const deleteOwnChats = async (req, res) => {
+  const { id } = req.user; 
+  const { chatIds } = req.body; 
+
+  try {
+      const deletedChats =await ChatRepository.deleteOwnChats(chatIds, id);
+
+      if (deletedChats === 0) {
+          return res.status(404).json({
+              success: false,
+              message: "No chats found to delete",
+          });
+      }
+
+      return res.status(200).json({
+          success: true,
+          message: "Chats deleted successfully",
+      });
+  } catch (error) {
+      console.error("Error deleting chats:", error);
+      return res.status(500).json({
+          success: false,
+          message: "Something went wrong",
+      });
   }
 };
+// export const updateMessageStatus = async ({ chatId, userId, status }) => {
+//   try {
+//     if (status === "seen") {
+//       const lastMessage = await ChatRepositroy.getLastMessage(chatId, userId);
+
+//       if (lastMessage) {
+//         await ChatRepositroy.updateMessageSeenAt(lastMessage.message_id);
+//       }
+//     } else if (status === "delivered") {
+//       const chats = await ChatRepositroy.findChatsByUserId(userId);
+
+//       const chatIds = chats.map((chat) => chat.chat_id);
+
+//       await ChatRepositroy.updateMessagesStatus({
+//         chatIds,
+//         userId,
+//         status,
+//       });
+//     }
+//   } catch (error) {
+//     console.error("Error updating message status:", error.message);
+//   }
+// };

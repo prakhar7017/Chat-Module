@@ -1,60 +1,89 @@
-import db from "../index.js"
-import { Op } from 'sequelize';
+import db from "../index.js";
+import { Op } from "sequelize";
 
-export const User = {
-    async findUser(username) {
-        try {
-            // Find the user using the User model
-            const user = await db.User.findOne({ where: { username } });
-            
-            // Return the found user object
-            return user;
-        } catch (error) {
-            // Handle any errors that occur during the user search process
-            console.error('Error finding user:', error);
-            throw new Error('Failed to find user.');
-        }
-    },
+export const UserRepository = {
+  async findUser(email) {
+    try {
+      // Find the user using the User model
+      const user = await db.User.findOne({ where: { email } });
 
-    async createUser(username, password) {
-        try {
-            // Create the user using the User model
-            const newUser = await db.User.create({ username, password });
-            
-            // Return the newly created user object
-            return newUser;
-        } catch (error) {
-            // Handle any errors that occur during the user creation process
-            console.error('Error creating user:', error);
-            throw new Error('Failed to create user.');
-        }
-    },
-
-    async findUserChats(userId){
-        try {
-            // Find all chats except the ones where the provided userId is a member
-            const userChats = await db.Chat.findAll({
-                include: [{
-                    model: db.ChatMember,
-                    where: {
-                        user_id: { [Op.ne]: userId }
-                    }
-                }]
-            });
-    
-            return userChats;
-        } catch (error) {
-            console.error('Error finding user chats:', error);
-            throw new Error('Failed to find user chats');
-        }
-    },
-    async updateUserStatus(userId, status) {
-        try {
-            const updatedStatus=await db.User.update({ status }, { where: { user_id: userId } });
-            return updatedStatus;
-        } catch (error) {
-            console.error('Error updating user status:', error);
-            throw new Error('Failed to update user status');
-        }
+      // Return the found user object
+      return user;
+    } catch (error) {
+      // Handle any errors that occur during the user search process
+      console.error("Error finding user:", error);
+      throw new Error("Failed to find user.");
     }
+  },
+
+  async createUser(username, email, password) {
+    try {
+      // Create the user using the User model
+      const newUser = await db.User.create({ username, email, password });
+
+      // Return the newly created user object
+      return newUser;
+    } catch (error) {
+      // Handle any errors that occur during the user creation process
+      console.error("Error creating user:", error);
+      throw new Error("Failed to create user.");
+    }
+  },
+
+  async findUserChats(userId) {
+    try {
+      // Find all chats where the provided userId is either the sender or the receiver
+      const userChats = await db.User.findAll({
+        where: {
+          [Op.or]: [{ sender_id: userId }, { receiver_id: userId }],
+        },
+        include: [
+          { model: db.User, as: "sender" },
+          { model: db.User, as: "receiver" },
+        ],
+      });
+  
+      return userChats;
+    } catch (error) {
+      console.error("Error finding user chats:", error);
+      throw new Error("Failed to find user chats");
+    }
+  },
+  async findAllUsersExceptCurrentUser(userId) {
+    try {
+      // Find all users except the current user
+      const users = await db.User.findAll({
+        where: {
+          userId: {
+            [Op.ne]: userId, // Exclude the current user ID
+          }
+        }
+      });
+      
+      return users;
+    } catch (error) {
+      console.error("Error finding users:", error);
+      throw new Error("Failed to find users");
+    }
+  },
+  async updateUserStatus(userId, status) {
+    try {
+      // Find the user by ID and update the status
+      const user = await db.User.findByPk(userId,{
+        attributes: { exclude: ['password', 'createdAt', 'updatedAt'] }
+      });
+      
+      if (!user) {
+        throw new Error('User not found');
+      }
+      
+      user.status = status;
+      await user.save();
+  
+      return user;
+    } catch (error) {
+      console.error("Error updating user status:", error);
+      throw new Error("Failed to update user status");
+    }
+  }
 };

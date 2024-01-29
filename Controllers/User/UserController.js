@@ -4,14 +4,14 @@ import {
   comparePassword,
   GenSign,
 } from "../../utils/common.js";
-import { User } from "../../Models/Repository/UserRepository.js";
+import { UserRepository } from "../../Models/Repository/UserRepository.js";
 
 export const RegisterUser = async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password,email } = req.body;
 
   try {
     // Validate inputs
-    if (validateInputs(username, password)) {
+    if (validateInputs(username, password,email)) {
       return res.status(400).json({
         success: false,
         message: "Invalid inputs",
@@ -19,7 +19,7 @@ export const RegisterUser = async (req, res) => {
     }
 
     // Check if user already exists
-    const user = await User.findUser(username);
+    const user = await UserRepository.findUser(email);
     if (user) {
       return res.status(400).json({
         success: false,
@@ -37,7 +37,7 @@ export const RegisterUser = async (req, res) => {
     }
 
     // createUser
-    const newUser = await User.createUser(username, hashedPassword);
+    const newUser = await UserRepository.createUser(username,email,hashedPassword);
     if (!newUser) {
       return res.status(500).json({
         success: false,
@@ -61,10 +61,10 @@ export const RegisterUser = async (req, res) => {
 };
 
 export const LoginUser = async (req, res) => {
-  const { username, password } = req.body;
+  const { email, password } = req.body;
 
   try {
-    if (validateInputs(username, password)) {
+    if (validateInputs(email, password)) {
       return res.status(400).json({
         success: false,
         message: "Invalid inputs",
@@ -72,7 +72,7 @@ export const LoginUser = async (req, res) => {
     }
 
     // Check if user exists
-    const user = await User.findUser(username);
+    const user = await UserRepository.findUser(email);
     if (!user) {
       return res.status(400).json({
         success: false,
@@ -90,9 +90,10 @@ export const LoginUser = async (req, res) => {
     }
 
     const payload = {
-      id: user.id,
-      username: user.username,
+      id: user.userId,
+      email: user.email,
     };
+    console.log("payload",payload)
 
     const token = await GenSign(payload, process.env.JWT_SECRET);
     // response
@@ -118,17 +119,17 @@ export const LoginUser = async (req, res) => {
 export const userDashboard = async (req, res) => {
   const {id} = req.user;
   try {
-    const userChats = await User.findUserChats(id);
-    if(!userChats || userChats.length === 0){
-      return res.status(400).json({
-        success:false,
-        message:"No chats found"
-      })
+    const users = await UserRepository.findAllUsersExceptCurrentUser(id);
+    if (!users || users.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "No other users found",
+      });
     }
     return res.status(200).json({
       success: true,
       message: "User chats found successfully",
-      data: userChats,
+      data: users,
     })
   } catch (error) {
     console.log("error in userDashboard", error);
@@ -138,3 +139,46 @@ export const userDashboard = async (req, res) => {
     });
   }
 }
+
+export const LogoutUser = async (req, res) => {
+  try {
+    // Clear the token by setting an expired date
+    res.cookie("token", "", {
+      expires: new Date(0),
+      httpOnly: true
+    }).status(200).json({
+      success: true,
+      message: "User logged out successfully",
+    });
+  } catch (error) {
+    console.log("error in logout", error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};
+
+export const UpdateUserStatus = async (req, res) => {
+  const { id } = req.user;
+  const { status } = req.body;
+  try {
+    const updatedStatus = await UserRepository.updateUserStatus(id, status);
+    if (!updatedStatus) {
+      return res.status(500).json({
+        success: false,
+        message: "Something went wrong",
+      });
+    }
+    return res.status(200).json({
+      success: true,
+      message: "User status updated successfully",
+    });
+  } catch (error) {
+    console.log("error in UpdateUserStatus", error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
+  }
+};

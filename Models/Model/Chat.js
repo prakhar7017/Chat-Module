@@ -1,21 +1,22 @@
 import { DataTypes } from "sequelize";
-import {sequelize} from "../../Configs/db.js";
+import { sequelize } from "../../Configs/db.js";
 
 export const Chat = sequelize.define("Chat", {
-  chat_id: {
-    type: DataTypes.INTEGER,
+  ChatId: {
+    type: DataTypes.UUID,
+    defaultValue: DataTypes.UUIDV4,
     primaryKey: true,
-    autoIncrement: true,
   },
-  chat_type: {
-    type: DataTypes.ENUM("One-to-One", "Group"),
+  sender_id: {
+    type: DataTypes.UUID,
     allowNull: false,
   },
-  chat_name: {
-    type: DataTypes.STRING,
+  receiver_id: {
+    type: DataTypes.UUID,
+    allowNull: false,
   },
-  created_at: {
-    type: DataTypes.DATE,
-    defaultValue: DataTypes.NOW,
+  message: {
+    type: DataTypes.STRING(1000),
+    allowNull: false,
   },
 });

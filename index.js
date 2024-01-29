@@ -9,6 +9,7 @@ import http from "http";
 import {Server} from "socket.io";
 import initializeChatModule from "./socket.js";
 import Routes from "./Routes/Router.js";
+import {ValidateSign} from "./utils/common.js";
 
 
 const app=express();
@@ -25,6 +26,14 @@ app.use((req, res, next) => {
     req.io = io;
     next();
 });
+// io.use(async (socket, next) => {
+//     try {
+//       const token = socket.handshake.query.token;
+//       const payload = await ValidateSign(token, process.env.SECRET);
+//       socket.userId = payload.id;
+//       next();
+//     } catch (err) {}
+//   });
 app.use(Routes);
 
 

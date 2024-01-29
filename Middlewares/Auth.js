@@ -11,7 +11,7 @@ export const isAuthenticated=async (req,res,next)=>{
             })
         }
         try {
-            const decode=ValidateSign(token,process.env.JWT_SECRET)
+            const decode=await ValidateSign(token,process.env.JWT_SECRET);
             req.user=decode;
         
         } catch (error) {
