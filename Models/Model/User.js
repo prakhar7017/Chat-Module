@@ -26,4 +26,7 @@ export const User = sequelize.define("User", {
     type: DataTypes.STRING,
     defaultValue: "offline",
   },
+  lastSeen: {
+    type: DataTypes.DATE,
+  },
 });

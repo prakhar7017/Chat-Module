@@ -19,4 +19,9 @@ export const Chat = sequelize.define("Chat", {
     type: DataTypes.STRING(1000),
     allowNull: false,
   },
+  status: {
+    type: DataTypes.ENUM("sent", "received", "seen"),
+    allowNull: false,
+    defaultValue: "sent", // Default status when a message is created
+  },
 });

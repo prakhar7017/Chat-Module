@@ -42,7 +42,7 @@ export const UserRepository = {
           { model: db.User, as: "receiver" },
         ],
       });
-  
+
       return userChats;
     } catch (error) {
       console.error("Error finding user chats:", error);
@@ -56,34 +56,37 @@ export const UserRepository = {
         where: {
           userId: {
             [Op.ne]: userId, // Exclude the current user ID
-          }
-        }
+          },
+        },
       });
-      
+
       return users;
     } catch (error) {
       console.error("Error finding users:", error);
       throw new Error("Failed to find users");
     }
   },
-  async updateUserStatus(userId, status) {
+  async updateUserStatus(userId, status,lastSeen=null) {
     try {
       // Find the user by ID and update the status
-      const user = await db.User.findByPk(userId,{
-        attributes: { exclude: ['password', 'createdAt', 'updatedAt'] }
+      const user = await db.User.findByPk(userId, {
+        attributes: { exclude: ["password", "createdAt", "updatedAt"] },
       });
-      
+
       if (!user) {
-        throw new Error('User not found');
+        throw new Error("User not found");
       }
-      
+
       user.status = status;
+      if(lastSeen!=null && lastSeen!=undefined){
+          user.lastSeen = lastSeen;
+      }
       await user.save();
-  
+
       return user;
     } catch (error) {
       console.error("Error updating user status:", error);
       throw new Error("Failed to update user status");
     }
-  }
+  },
 };

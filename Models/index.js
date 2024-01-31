@@ -23,3 +23,13 @@ const db = {
     Chat,
 };
 export default db ;
+
+
+// {
+//     "ChatId":"f4e55946-97c5-42ff-94df-ed0e1d99d770",
+//     "sender_id":"0868d0a1-e161-4900-9499-325cabaa78e1",
+//     "receiver_id":"522eca3e-b365-4dee-91e7-65ceda8310f8",
+//     "message": "heelo",
+//     "updatedAt": "2024-01-29T16:01:02.699Z",
+//     "createdAt": "2024-01-29T16:01:02.699Z"
+// }

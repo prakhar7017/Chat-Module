@@ -81,26 +81,3 @@ export const deleteOwnChats = async (req, res) => {
       });
   }
 };
-// export const updateMessageStatus = async ({ chatId, userId, status }) => {
-//   try {
-//     if (status === "seen") {
-//       const lastMessage = await ChatRepositroy.getLastMessage(chatId, userId);
-
-//       if (lastMessage) {
-//         await ChatRepositroy.updateMessageSeenAt(lastMessage.message_id);
-//       }
-//     } else if (status === "delivered") {
-//       const chats = await ChatRepositroy.findChatsByUserId(userId);
-
-//       const chatIds = chats.map((chat) => chat.chat_id);
-
-//       await ChatRepositroy.updateMessagesStatus({
-//         chatIds,
-//         userId,
-//         status,
-//       });
-//     }
-//   } catch (error) {
-//     console.error("Error updating message status:", error.message);
-//   }
-// };
